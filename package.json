@@ -1,0 +1,31 @@
+{
+  "name": "square-foot-garden-planner",
+  "version": "4.1.0",
+  "description": "A comprehensive square foot garden planning tool with configurable gardens, flexible fill options, harvest tracking, variety management, and visual indicators",
+  "main": "index.html",
+  "scripts": {
+    "start": "open index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/garden-planner.git"
+  },
+  "keywords": [
+    "garden",
+    "planning",
+    "square-foot-gardening",
+    "harvest-calendar",
+    "vegetable-garden",
+    "gardening-tool",
+    "raised-bed",
+    "succession-planting",
+    "batch-planting",
+    "configurable-gardens"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/garden-planner/issues"
+  },
+  "homepage": "https://github.com/yourusername/garden-planner#readme"
+}
