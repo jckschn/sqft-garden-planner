@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Square Foot Garden Planner</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <div id="error" style="display:none; padding: 20px; background: #fee; border: 2px solid red; margin: 20px;">
+        <h2>Error Loading Application</h2>
+        <pre id="error-message"></pre>
+    </div>
+
+    <script type="text/babel">
+        try {
+        const { useState, useEffect } = React;
+
+        // Lucide React icons as inline SVG components
+        const CalendarDays = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+                <path d="M8 14h.01"/>
+                <path d="M12 14h.01"/>
+                <path d="M16 14h.01"/>
+                <path d="M8 18h.01"/>
+                <path d="M12 18h.01"/>
+                <path d="M16 18h.01"/>
+            </svg>
+        );
+
+        const Save = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+            </svg>
+        );
+
+        const Download = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+        );
+
+        const Upload = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+        );
+
+        // Lucide React icons as inline SVG components
+        const Sprout = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 20h10"/>
+                <path d="M10 20c5.5-2.5.8-6.4 3-10"/>
+                <path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/>
+                <path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>
+            </svg>
+        );
+
+        const Calendar = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+        );
+
+        const Clock = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+        );
+
+        const Package = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16.5 9.4l-9-5.19"/>
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+        );
+
+        const Grid = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="3" y1="15" x2="21" y2="15"/>
+                <line x1="9" y1="3" x2="9" y2="21"/>
+                <line x1="15" y1="3" x2="15" y2="21"/>
+            </svg>
+        );
+
+        const Rows = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        );
+
+        const Plus = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+        );
+
+        const Edit2 = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+            </svg>
+        );
+
+        const Trash2 = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+        );
+
+        const Settings = ({ className, ...props }) => (
+            <svg className={className} {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v6m0 6v6m-6-6h6m6 0h6m-6-6 4.24-4.24m-8.49 0L3.76 5.76m0 12.49L7.76 14.24m8.49 0 4.24 4.24"/>
+            </svg>
+        );
+
+        function GardenPlanner() {
+            // Define default vegetables FIRST before using them
+            const defaultVegetables = [
+                { name: 'Tomato', abbrev: 'TOM', daysToMaturity: 70, color: '#ef4444', isParent: true },
+                { name: 'Lettuce', abbrev: 'LET', daysToMaturity: 45, color: '#22c55e', isParent: true },
+                { name: 'Carrot', abbrev: 'CAR', daysToMaturity: 70, color: '#f97316', isParent: true },
+                { name: 'Pepper', abbrev: 'PEP', daysToMaturity: 80, color: '#eab308', isParent: true },
+                { name: 'Cucumber', abbrev: 'CUC', daysToMaturity: 55, color: '#84cc16', isParent: true },
+                { name: 'Radish', abbrev: 'RAD', daysToMaturity: 25, color: '#ec4899', isParent: true },
+                { name: 'Spinach', abbrev: 'SPI', daysToMaturity: 40, color: '#10b981', isParent: true },
+                { name: 'Bean', abbrev: 'BEA', daysToMaturity: 55, color: '#8b5cf6', isParent: true },
+                { name: 'Pea', abbrev: 'PEA', daysToMaturity: 60, color: '#6366f1', isParent: true },
+                { name: 'Onion', abbrev: 'ONI', daysToMaturity: 100, color: '#f59e0b', isParent: true },
+                { name: 'Broccoli', abbrev: 'BRO', daysToMaturity: 85, color: '#059669', isParent: true },
+                { name: 'Cauliflower', abbrev: 'CAU', daysToMaturity: 85, color: '#f5f5f4', isParent: true },
+                { name: 'Potato', abbrev: 'POT', daysToMaturity: 90, color: '#92400e', isParent: true },
+                { name: 'None', abbrev: '', daysToMaturity: 0, color: '#d1d5db', isParent: true }
+            ];
+            
+            // Load saved data from localStorage on startup
+            const loadSavedData = () => {
+                try {
+                    const savedBeds = localStorage.getItem('gardenPlannerBeds');
+                    const savedVegetables = localStorage.getItem('gardenPlannerVegetables');
+                    const savedConfig = localStorage.getItem('gardenPlannerConfig');
+                    
+                    const config = savedConfig ? JSON.parse(savedConfig) : {
+                        gardens: [
+                            { id: 1, name: 'Garden 1', width: 3, height: 6, enabled: true },
+                            { id: 2, name: 'Garden 2', width: 3, height: 6, enabled: true },
+                            { id: 3, name: 'Garden 3', width: 3, height: 6, enabled: false },
+                            { id: 4, name: 'Garden 4', width: 3, height: 6, enabled: false }
+                        ]
+                    };
+                    
+                    return {
+                        beds: savedBeds ? JSON.parse(savedBeds) : config.gardens
+                            .filter(g => g.enabled)
+                            .map(g => ({ 
+                                id: g.id, 
+                                name: g.name, 
+                                width: g.width,
+                                height: g.height,
+                                squares: initializeSquares(g.width, g.height) 
+                            })),
+                        vegetables: savedVegetables ? JSON.parse(savedVegetables) : defaultVegetables,
+                        config: config
+                    };
+                } catch (error) {
+                    console.error('Error loading saved data:', error);
+                    const defaultConfig = {
+                        gardens: [
+                            { id: 1, name: 'Garden 1', width: 3, height: 6, enabled: true },
+                            { id: 2, name: 'Garden 2', width: 3, height: 6, enabled: true },
+                            { id: 3, name: 'Garden 3', width: 3, height: 6, enabled: false },
+                            { id: 4, name: 'Garden 4', width: 3, height: 6, enabled: false }
+                        ]
+                    };
+                    return {
+                        beds: [
+                            { id: 1, name: 'Garden 1', width: 3, height: 6, squares: initializeSquares(3, 6) },
+                            { id: 2, name: 'Garden 2', width: 3, height: 6, squares: initializeSquares(3, 6) }
+                        ],
+                        vegetables: defaultVegetables,
+                        config: defaultConfig
+                    };
+                }
+            };
+
+            const initialData = loadSavedData();
+            const [beds, setBeds] = useState(initialData.beds);
+            const [vegetables, setVegetables] = useState(initialData.vegetables);
+            const [gardenConfig, setGardenConfig] = useState(initialData.config);
+            
+            const [selectedDot, setSelectedDot] = useState(null);
+            const [showModal, setShowModal] = useState(false);
+            const [showBatchModal, setShowBatchModal] = useState(false);
+            const [showVeggieManager, setShowVeggieManager] = useState(false);
+            const [showHarvestCalendar, setShowHarvestCalendar] = useState(false);
+            const [showGardenConfig, setShowGardenConfig] = useState(false);
+            const [editingBedName, setEditingBedName] = useState(null);
+            const [batchConfig, setBatchConfig] = useState({ bedId: null, mode: 'row', rowIndex: null, colIndex: null, squareIndex: null });
+            const [saveStatus, setSaveStatus] = useState('');
+            
+            // Auto-save whenever beds, vegetables, or config change
+            useEffect(() => {
+                try {
+                    localStorage.setItem('gardenPlannerBeds', JSON.stringify(beds));
+                    localStorage.setItem('gardenPlannerVegetables', JSON.stringify(vegetables));
+                    localStorage.setItem('gardenPlannerConfig', JSON.stringify(gardenConfig));
+                    setSaveStatus('✓ Saved');
+                    const timer = setTimeout(() => setSaveStatus(''), 2000);
+                    return () => clearTimeout(timer);
+                } catch (error) {
+                    console.error('Error saving data:', error);
+                    setSaveStatus('⚠ Save failed');
+                }
+            }, [beds, vegetables, gardenConfig]);
+            
+            // Get vegetable with parent fallback for missing properties
+            function getVegetableData(veggieName) {
+                const veggie = vegetables.find(v => v.name === veggieName);
+                if (!veggie) return null;
+                
+                // If it has a parent and is missing data, inherit from parent
+                if (veggie.parentName) {
+                    const parent = vegetables.find(v => v.name === veggie.parentName);
+                    if (parent) {
+                        return {
+                            ...parent,
+                            ...veggie,
+                            // Keep variety name but use parent's data as fallback
+                            name: veggie.name,
+                            abbrev: veggie.abbrev || parent.abbrev,
+                            daysToMaturity: veggie.daysToMaturity || parent.daysToMaturity,
+                            color: veggie.color || parent.color
+                        };
+                    }
+                }
+                
+                return veggie;
+            }
+            
+            // Get organized vegetable list (parents with their varieties grouped)
+            function getOrganizedVegetables() {
+                const parents = vegetables.filter(v => v.isParent);
+                const varieties = vegetables.filter(v => !v.isParent);
+                
+                const organized = [];
+                parents.forEach(parent => {
+                    organized.push(parent);
+                    const parentVarieties = varieties.filter(v => v.parentName === parent.name);
+                    organized.push(...parentVarieties);
+                });
+                
+                return organized;
+            }
+            
+            // Export garden plan as JSON file
+            function exportGardenPlan() {
+                const data = {
+                    beds,
+                    vegetables,
+                    exportDate: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `garden-plan-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            // Import garden plan from JSON file
+            function importGardenPlan(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.beds && data.vegetables) {
+                            setBeds(data.beds);
+                            setVegetables(data.vegetables);
+                            alert('Garden plan imported successfully!');
+                        } else {
+                            alert('Invalid garden plan file');
+                        }
+                    } catch (error) {
+                        alert('Error importing file: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = ''; // Reset input
+            }
+            
+            // Clear all data and reset to defaults
+            function clearAllData() {
+                if (confirm('Are you sure you want to clear all garden data? This cannot be undone.')) {
+                    localStorage.removeItem('gardenPlannerBeds');
+                    localStorage.removeItem('gardenPlannerVegetables');
+                    setBeds([
+                        { id: 1, name: 'Raised Bed 1', squares: initializeSquares() },
+                        { id: 2, name: 'Raised Bed 2', squares: initializeSquares() }
+                    ]);
+                    setVegetables(defaultVegetables);
+                    alert('All data cleared!');
+                }
+            }
+            
+            // Update bed name
+            function updateBedName(bedId, newName) {
+                const newBeds = beds.map(bed => 
+                    bed.id === bedId ? { ...bed, name: newName } : bed
+                );
+                setBeds(newBeds);
+                setEditingBedName(null);
+            }
+            
+            // Check if a plant is ready to harvest (within 7 days or past harvest date)
+            function isReadyToHarvest(harvestDate) {
+                if (!harvestDate) return false;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const harvest = new Date(harvestDate);
+                harvest.setHours(0, 0, 0, 0);
+                const daysUntilHarvest = Math.ceil((harvest - today) / (1000 * 60 * 60 * 24));
+                return daysUntilHarvest <= 7; // Ready if within 7 days or past
+            }
+            
+            // Generate harvest calendar data
+            function generateHarvestCalendar() {
+                const harvestEvents = [];
+                
+                beds.forEach(bed => {
+                    bed.squares.forEach(square => {
+                        square.dots.forEach(dot => {
+                            if (dot.vegetable && dot.harvestDate) {
+                                harvestEvents.push({
+                                    bedName: bed.name,
+                                    vegetable: dot.vegetable,
+                                    plantingDate: dot.plantingDate,
+                                    harvestDate: dot.harvestDate,
+                                    daysToMaturity: dot.daysToMaturity
+                                });
+                            }
+                        });
+                    });
+                });
+                
+                // Sort by harvest date
+                harvestEvents.sort((a, b) => new Date(a.harvestDate) - new Date(b.harvestDate));
+                
+                // Group by week
+                const weeklyHarvests = {};
+                harvestEvents.forEach(event => {
+                    const harvestDate = new Date(event.harvestDate);
+                    const weekStart = new Date(harvestDate);
+                    weekStart.setDate(harvestDate.getDate() - harvestDate.getDay()); // Start of week (Sunday)
+                    const weekKey = weekStart.toISOString().split('T')[0];
+                    
+                    if (!weeklyHarvests[weekKey]) {
+                        weeklyHarvests[weekKey] = [];
+                    }
+                    weeklyHarvests[weekKey].push(event);
+                });
+                
+                return weeklyHarvests;
+            }
+            
+            function initializeSquares(width = 6, height = 3) {
+                const squares = [];
+                for (let row = 0; row < height; row++) {
+                    for (let col = 0; col < width; col++) {
+                        squares.push({
+                            row,
+                            col,
+                            dotCount: 4,
+                            dots: createDots(4)
+                        });
+                    }
+                }
+                return squares;
+            }
+            
+            function createDots(count) {
+                const dots = [];
+                for (let i = 0; i < count; i++) {
+                    dots.push({ 
+                        id: i, 
+                        vegetable: null, 
+                        plantingDate: '', 
+                        daysToMaturity: 0, 
+                        harvestDate: '',
+                        color: '#d1d5db'
+                    });
+                }
+                return dots;
+            }
+            
+            function calculateHarvestDate(plantingDate, daysToMaturity) {
+                if (!plantingDate || !daysToMaturity) return '';
+                const date = new Date(plantingDate);
+                date.setDate(date.getDate() + daysToMaturity);
+                return date.toISOString().split('T')[0];
+            }
+            
+            function handleDotClick(bedId, squareIndex, dotId) {
+                const bed = beds.find(b => b.id === bedId);
+                const square = bed.squares[squareIndex];
+                const dot = square.dots[dotId];
+                
+                setSelectedDot({
+                    bedId,
+                    squareIndex,
+                    dotId,
+                    ...dot
+                });
+                setShowModal(true);
+            }
+            
+            function handleBatchPlant(bedId, mode, rowIndex = null, colIndex = null, squareIndex = null) {
+                setBatchConfig({ bedId, mode, rowIndex, colIndex, squareIndex });
+                setShowBatchModal(true);
+            }
+            
+            function applyBatchPlanting(batchData) {
+                const { vegetable, plantingDate, daysToMaturity, dotCount } = batchData;
+                const veggieData = getVegetableData(vegetable);
+                const harvestDate = calculateHarvestDate(plantingDate, daysToMaturity);
+                
+                const newBeds = beds.map(bed => {
+                    if (bed.id === batchConfig.bedId) {
+                        const newSquares = bed.squares.map((square, index) => {
+                            let shouldUpdate = false;
+                            
+                            if (batchConfig.mode === 'square') {
+                                // Fill all squares
+                                shouldUpdate = true;
+                            } else if (batchConfig.mode === 'row') {
+                                // Fill entire row
+                                shouldUpdate = square.row === batchConfig.rowIndex;
+                            } else if (batchConfig.mode === 'column') {
+                                // Fill entire column
+                                shouldUpdate = square.col === batchConfig.colIndex;
+                            } else if (batchConfig.mode === 'cell') {
+                                // Fill single cell
+                                shouldUpdate = index === batchConfig.squareIndex;
+                            }
+                            
+                            if (shouldUpdate) {
+                                const newDots = createDots(dotCount).map(dot => ({
+                                    ...dot,
+                                    vegetable,
+                                    plantingDate,
+                                    daysToMaturity,
+                                    harvestDate,
+                                    color: veggieData?.color || '#d1d5db'
+                                }));
+                                
+                                return { ...square, dotCount, dots: newDots };
+                            }
+                            return square;
+                        });
+                        
+                        return { ...bed, squares: newSquares };
+                    }
+                    return bed;
+                });
+                
+                setBeds(newBeds);
+                setShowBatchModal(false);
+            }
+            
+            function updateSquareDotCount(bedId, squareIndex, newDotCount) {
+                const newBeds = beds.map(bed => {
+                    if (bed.id === bedId) {
+                        const newSquares = [...bed.squares];
+                        const square = newSquares[squareIndex];
+                        const currentDots = square.dots;
+                        
+                        let newDots;
+                        if (newDotCount > currentDots.length) {
+                            newDots = [...currentDots, ...createDots(newDotCount - currentDots.length)];
+                        } else {
+                            newDots = currentDots.slice(0, newDotCount);
+                        }
+                        
+                        newDots = newDots.map((dot, idx) => ({ ...dot, id: idx }));
+                        newSquares[squareIndex] = { ...square, dotCount: newDotCount, dots: newDots };
+                        
+                        return { ...bed, squares: newSquares };
+                    }
+                    return bed;
+                });
+                
+                setBeds(newBeds);
+            }
+            
+            function handleSave(updatedData) {
+                const newBeds = beds.map(bed => {
+                    if (bed.id === selectedDot.bedId) {
+                        const newSquares = [...bed.squares];
+                        const veggieData = getVegetableData(updatedData.vegetable);
+                        const harvestDate = calculateHarvestDate(updatedData.plantingDate, updatedData.daysToMaturity);
+                        
+                        newSquares[selectedDot.squareIndex].dots[selectedDot.dotId] = {
+                            id: selectedDot.dotId,
+                            vegetable: updatedData.vegetable,
+                            plantingDate: updatedData.plantingDate,
+                            daysToMaturity: updatedData.daysToMaturity,
+                            harvestDate: harvestDate,
+                            color: veggieData?.color || '#d1d5db'
+                        };
+                        
+                        return { ...bed, squares: newSquares };
+                    }
+                    return bed;
+                });
+                
+                setBeds(newBeds);
+                setShowModal(false);
+                setSelectedDot(null);
+            }
+            
+            function addCustomVegetable(newVeggie) {
+                setVegetables([...vegetables, newVeggie]);
+            }
+            
+            function updateVegetable(oldName, updatedVeggie) {
+                const newVegetables = vegetables.map(v => 
+                    v.name === oldName ? updatedVeggie : v
+                );
+                setVegetables(newVegetables);
+                
+                const newBeds = beds.map(bed => ({
+                    ...bed,
+                    squares: bed.squares.map(square => ({
+                        ...square,
+                        dots: square.dots.map(dot => {
+                            if (dot.vegetable === oldName) {
+                                return { 
+                                    ...dot, 
+                                    vegetable: updatedVeggie.name, 
+                                    color: updatedVeggie.color 
+                                };
+                            }
+                            return dot;
+                        })
+                    }))
+                }));
+                setBeds(newBeds);
+            }
+            
+            function deleteVegetable(vegName) {
+                setVegetables(vegetables.filter(v => v.name !== vegName));
+                
+                const newBeds = beds.map(bed => ({
+                    ...bed,
+                    squares: bed.squares.map(square => ({
+                        ...square,
+                        dots: square.dots.map(dot => 
+                            dot.vegetable === vegName 
+                                ? { ...dot, vegetable: null, color: '#d1d5db', plantingDate: '', daysToMaturity: 0, harvestDate: '' }
+                                : dot
+                        )
+                    }))
+                }));
+                setBeds(newBeds);
+            }
+            
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-8">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-8">
+                            <h1 className="text-4xl font-bold text-green-800 mb-2 flex items-center justify-center gap-3">
+                                <Sprout className="w-10 h-10" />
+                                Square Foot Garden Planner
+                            </h1>
+                            <p className="text-green-700">
+                                {beds.length} garden{beds.length !== 1 ? 's' : ''} configured (up to 4 gardens, 10ft × 10ft max each)
+                            </p>
+                            
+                            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                                <button
+                                    onClick={() => setShowGardenConfig(true)}
+                                    className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-semibold transition-colors flex items-center gap-2"
+                                >
+                                    <Settings className="w-4 h-4" />
+                                    Garden Settings
+                                </button>
+                                
+                                <button
+                                    onClick={() => setShowVeggieManager(true)}
+                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors flex items-center gap-2"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                    Manage Vegetables
+                                </button>
+                                
+                                <button
+                                    onClick={() => setShowHarvestCalendar(true)}
+                                    className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-semibold transition-colors flex items-center gap-2"
+                                >
+                                    <CalendarDays className="w-4 h-4" />
+                                    Harvest Calendar
+                                </button>
+                                
+                                <button
+                                    onClick={exportGardenPlan}
+                                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold transition-colors flex items-center gap-2"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Export Plan
+                                </button>
+                                
+                                <label className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold transition-colors flex items-center gap-2 cursor-pointer">
+                                    <Upload className="w-4 h-4" />
+                                    Import Plan
+                                    <input
+                                        type="file"
+                                        accept=".json"
+                                        onChange={importGardenPlan}
+                                        className="hidden"
+                                    />
+                                </label>
+                                
+                                <button
+                                    onClick={clearAllData}
+                                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold transition-colors flex items-center gap-2"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Clear All
+                                </button>
+                            </div>
+                            
+                            {saveStatus && (
+                                <div className="mt-3 text-sm font-semibold text-green-700">
+                                    {saveStatus}
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="space-y-12">
+                            {beds.map(bed => (
+                                <div key={bed.id} className="bg-white rounded-xl shadow-lg p-6">
+                                    <div className="flex items-center justify-between mb-6">
+                                        {editingBedName === bed.id ? (
+                                            <input
+                                                type="text"
+                                                defaultValue={bed.name}
+                                                onBlur={(e) => updateBedName(bed.id, e.target.value)}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        updateBedName(bed.id, e.target.value);
+                                                    }
+                                                }}
+                                                autoFocus
+                                                className="text-2xl font-bold text-green-800 border-2 border-green-500 rounded px-2 py-1"
+                                            />
+                                        ) : (
+                                            <h2 
+                                                onClick={() => setEditingBedName(bed.id)}
+                                                className="text-2xl font-bold text-green-800 cursor-pointer hover:text-green-600 transition-colors"
+                                                title="Click to edit name"
+                                            >
+                                                {bed.name} ✏️
+                                            </h2>
+                                        )}
+                                        <button
+                                            onClick={() => handleBatchPlant(bed.id, 'square')}
+                                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors flex items-center gap-2"
+                                        >
+                                            <Grid className="w-4 h-4" />
+                                            Fill All Squares
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="inline-block border-4 border-amber-800 bg-amber-50 p-4 rounded-lg">
+                                        <div className="text-sm text-gray-600 mb-3 font-semibold">
+                                            {bed.width || 6}ft × {bed.height || 3}ft ({bed.width * bed.height} sq ft)
+                                        </div>
+                                        
+                                        {/* Column Headers with Fill Column buttons */}
+                                        <div className="flex gap-3 mb-2 ml-20">
+                                            {Array.from({ length: bed.width || 6 }, (_, colIndex) => (
+                                                <div key={colIndex} className="flex flex-col items-center" style={{ width: '96px' }}>
+                                                    <span className="text-xs font-semibold text-gray-600 mb-1">Col {colIndex + 1}</span>
+                                                    <button
+                                                        onClick={() => handleBatchPlant(bed.id, 'column', null, colIndex)}
+                                                        className="px-2 py-1 bg-cyan-600 text-white text-xs rounded hover:bg-cyan-700 font-semibold transition-colors whitespace-nowrap"
+                                                        title={`Fill column ${colIndex + 1}`}
+                                                    >
+                                                        Fill Col
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            {Array.from({ length: bed.height || 3 }, (_, rowIndex) => (
+                                                <div key={rowIndex}>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className="text-sm font-semibold text-gray-600 w-16">Row {rowIndex + 1}</span>
+                                                        <button
+                                                            onClick={() => handleBatchPlant(bed.id, 'row', rowIndex)}
+                                                            className="px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 font-semibold transition-colors flex items-center gap-1"
+                                                        >
+                                                            <Rows className="w-3 h-3" />
+                                                            Fill Row
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <div 
+                                                        className="grid gap-3"
+                                                        style={{ gridTemplateColumns: `repeat(${bed.width || 6}, minmax(0, 1fr))` }}
+                                                    >
+                                                        {bed.squares
+                                                            .filter(square => square.row === rowIndex)
+                                                            .map((square, squareIndex) => {
+                                                                const actualSquareIndex = rowIndex * (bed.width || 6) + squareIndex;
+                                                                return (
+                                                                    <SquareComponent
+                                                                        key={`${square.row}-${square.col}`}
+                                                                        square={square}
+                                                                        bedId={bed.id}
+                                                                        squareIndex={actualSquareIndex}
+                                                                        vegetables={vegetables}
+                                                                        onDotClick={handleDotClick}
+                                                                        onDotCountChange={updateSquareDotCount}
+                                                                        isReadyToHarvest={isReadyToHarvest}
+                                                                        getVegetableData={getVegetableData}
+                                                                        onFillCell={handleBatchPlant}
+                                                                    />
+                                                                );
+                                                            })}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mt-6 flex flex-wrap gap-2">
+                                        {vegetables.filter(v => v.name !== 'None' && 
+                                            bed.squares.some(s => s.dots.some(d => d.vegetable === v.name))
+                                        ).map(veg => (
+                                            <div key={veg.name} className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
+                                                <div 
+                                                    className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center"
+                                                    style={{ backgroundColor: veg.color }}
+                                                >
+                                                    <span className="text-xs font-bold text-white drop-shadow-md">{veg.abbrev}</span>
+                                                </div>
+                                                <span className="text-sm font-medium text-gray-700">{veg.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {showModal && selectedDot && (
+                        <PlantModal
+                            selectedDot={selectedDot}
+                            vegetables={vegetables}
+                            onSave={handleSave}
+                            onClose={() => {
+                                setShowModal(false);
+                                setSelectedDot(null);
+                            }}
+                            calculateHarvestDate={calculateHarvestDate}
+                            getVegetableData={getVegetableData}
+                            getOrganizedVegetables={getOrganizedVegetables}
+                        />
+                    )}
+                    
+                    {showBatchModal && (
+                        <BatchPlantModal
+                            config={batchConfig}
+                            vegetables={vegetables}
+                            onSave={applyBatchPlanting}
+                            onClose={() => setShowBatchModal(false)}
+                            getVegetableData={getVegetableData}
+                            getOrganizedVegetables={getOrganizedVegetables}
+                        />
+                    )}
+                    
+                    {showVeggieManager && (
+                        <VegetableManager
+                            vegetables={vegetables}
+                            onAdd={addCustomVegetable}
+                            onUpdate={updateVegetable}
+                            onDelete={deleteVegetable}
+                            onClose={() => setShowVeggieManager(false)}
+                        />
+                    )}
+                    
+                    {showGardenConfig && (
+                        <GardenConfigModal
+                            config={gardenConfig}
+                            beds={beds}
+                            onSave={(newConfig) => {
+                                setGardenConfig(newConfig);
+                                // Rebuild beds based on new config
+                                const newBeds = newConfig.gardens
+                                    .filter(g => g.enabled)
+                                    .map(g => {
+                                        const existingBed = beds.find(b => b.id === g.id);
+                                        if (existingBed && existingBed.width === g.width && existingBed.height === g.height) {
+                                            // Keep existing bed if dimensions haven't changed
+                                            return { ...existingBed, name: g.name, width: g.width, height: g.height };
+                                        } else {
+                                            // Create new bed with new dimensions
+                                            return {
+                                                id: g.id,
+                                                name: g.name,
+                                                width: g.width,
+                                                height: g.height,
+                                                squares: initializeSquares(g.width, g.height)
+                                            };
+                                        }
+                                    });
+                                setBeds(newBeds);
+                                setShowGardenConfig(false);
+                            }}
+                            onClose={() => setShowGardenConfig(false)}
+                        />
+                    )}
+                    
+                    {showHarvestCalendar && (
+                        <HarvestCalendar
+                            weeklyHarvests={generateHarvestCalendar()}
+                            vegetables={vegetables}
+                            onClose={() => setShowHarvestCalendar(false)}
+                            getVegetableData={getVegetableData}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        function SquareComponent({ square, bedId, squareIndex, vegetables, onDotClick, onDotCountChange, isReadyToHarvest, getVegetableData, onFillCell }) {
+            const [showDotConfig, setShowDotConfig] = useState(false);
+            const [showFillCell, setShowFillCell] = useState(false);
+            
+            const gridClass = square.dotCount === 1 
+                ? 'flex items-center justify-center'
+                : square.dotCount === 2
+                ? 'grid grid-cols-2 gap-1'
+                : square.dotCount === 3
+                ? 'grid grid-cols-3 gap-1'
+                : square.dotCount === 4
+                ? 'grid grid-cols-2 grid-rows-2 gap-1'
+                : square.dotCount === 6
+                ? 'grid grid-cols-3 grid-rows-2 gap-1'
+                : square.dotCount === 9
+                ? 'grid grid-cols-3 grid-rows-3 gap-1'
+                : 'grid grid-cols-4 grid-rows-4 gap-1';
+            
+            return (
+                <div className="relative group">
+                    <div className="w-24 h-24 border-2 border-green-700 bg-white rounded relative">
+                        <div className={`absolute inset-0 p-2 ${gridClass}`}>
+                            {square.dots.map(dot => {
+                                const veggie = getVegetableData(dot.vegetable);
+                                const readyToHarvest = isReadyToHarvest(dot.harvestDate);
+                                
+                                return (
+                                    <button
+                                        key={dot.id}
+                                        onClick={() => onDotClick(bedId, squareIndex, dot.id)}
+                                        className={`w-full h-full rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center relative ${
+                                            readyToHarvest 
+                                                ? 'border-yellow-400 animate-pulse shadow-lg shadow-yellow-300' 
+                                                : 'border-gray-300 hover:border-green-600'
+                                        }`}
+                                        style={{ 
+                                            backgroundColor: dot.vegetable ? dot.color : '#f3f4f6',
+                                            boxShadow: dot.vegetable ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                                            backgroundImage: readyToHarvest 
+                                                ? 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.3) 2px, rgba(255,255,255,0.3) 4px)'
+                                                : 'none'
+                                        }}
+                                        title={dot.vegetable ? `${dot.vegetable}${readyToHarvest ? ' - Ready to Harvest!' : ''}` : 'Empty'}
+                                    >
+                                        {dot.vegetable && veggie && (
+                                            <span className="text-xs font-bold text-white drop-shadow-md relative z-10">
+                                                {veggie.abbrev}
+                                            </span>
+                                        )}
+                                        {readyToHarvest && (
+                                            <div className="absolute inset-0 rounded-full border-2 border-yellow-400 animate-ping opacity-75"></div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    
+                    {/* Fill Cell button - appears on hover */}
+                    <button
+                        onClick={() => onFillCell(bedId, 'cell', null, null, squareIndex)}
+                        className="absolute -top-2 -left-2 px-2 py-1 bg-orange-500 text-white rounded text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-orange-600 whitespace-nowrap"
+                        title="Fill this cell with same vegetable"
+                    >
+                        Fill
+                    </button>
+                    
+                    {/* Dot count badge */}
+                    <button
+                        onClick={() => setShowDotConfig(!showDotConfig)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 text-white rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-600"
+                        title="Change dot count"
+                    >
+                        {square.dotCount}
+                    </button>
+                    
+                    {showDotConfig && (
+                        <div className="absolute top-8 right-0 bg-white border-2 border-gray-300 rounded shadow-lg p-2 z-10">
+                            <div className="text-xs font-semibold mb-1">Plants per square:</div>
+                            <div className="grid grid-cols-3 gap-1">
+                                {[1, 2, 3, 4, 6, 9, 16].map(count => (
+                                    <button
+                                        key={count}
+                                        onClick={() => {
+                                            onDotCountChange(bedId, squareIndex, count);
+                                            setShowDotConfig(false);
+                                        }}
+                                        className={`px-2 py-1 text-xs rounded ${
+                                            square.dotCount === count
+                                                ? 'bg-blue-500 text-white'
+                                                : 'bg-gray-100 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        {count}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function PlantModal({ selectedDot, vegetables, onSave, onClose, calculateHarvestDate, getVegetableData, getOrganizedVegetables }) {
+            const [formData, setFormData] = useState({
+                vegetable: selectedDot.vegetable || '',
+                plantingDate: selectedDot.plantingDate || '',
+                daysToMaturity: selectedDot.daysToMaturity || '',
+                harvestDate: selectedDot.harvestDate || ''
+            });
+            
+            function handleVegetableChange(vegName) {
+                const veggieData = getVegetableData(vegName);
+                const newData = {
+                    ...formData,
+                    vegetable: vegName,
+                    daysToMaturity: veggieData?.daysToMaturity || 0
+                };
+                
+                if (formData.plantingDate) {
+                    newData.harvestDate = calculateHarvestDate(formData.plantingDate, veggieData?.daysToMaturity || 0);
+                }
+                
+                setFormData(newData);
+            }
+            
+            function handlePlantingDateChange(date) {
+                const newData = {
+                    ...formData,
+                    plantingDate: date,
+                    harvestDate: calculateHarvestDate(date, formData.daysToMaturity)
+                };
+                setFormData(newData);
+            }
+            
+            function handleDaysChange(days) {
+                const newData = {
+                    ...formData,
+                    daysToMaturity: parseInt(days) || 0,
+                    harvestDate: calculateHarvestDate(formData.plantingDate, parseInt(days) || 0)
+                };
+                setFormData(newData);
+            }
+            
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-2xl font-bold text-green-800 flex items-center gap-2">
+                                <Sprout className="w-6 h-6" />
+                                Plant Details
+                            </h3>
+                            <button 
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <Package className="w-4 h-4" />
+                                    Vegetable Type
+                                </label>
+                                <select
+                                    value={formData.vegetable}
+                                    onChange={(e) => handleVegetableChange(e.target.value)}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                                >
+                                    <option value="">Select vegetable...</option>
+                                    {getOrganizedVegetables().map(veg => (
+                                        <option 
+                                            key={veg.name} 
+                                            value={veg.name}
+                                            style={{ paddingLeft: veg.isParent ? '0' : '20px' }}
+                                        >
+                                            {veg.isParent ? veg.name : `  ↳ ${veg.name}`}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <Calendar className="w-4 h-4" />
+                                    Planting Start Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={formData.plantingDate}
+                                    onChange={(e) => handlePlantingDateChange(e.target.value)}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <Clock className="w-4 h-4" />
+                                    Days to Maturity
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.daysToMaturity}
+                                    onChange={(e) => handleDaysChange(e.target.value)}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                                    min="0"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <Calendar className="w-4 h-4" />
+                                    Expected Harvest Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={formData.harvestDate}
+                                    readOnly
+                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => onSave(formData)}
+                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold transition-colors"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function BatchPlantModal({ config, vegetables, onSave, onClose, getVegetableData, getOrganizedVegetables }) {
+            const [formData, setFormData] = useState({
+                vegetable: '',
+                plantingDate: '',
+                daysToMaturity: '',
+                dotCount: 4
+            });
+            
+            function handleVegetableChange(vegName) {
+                const veggieData = getVegetableData(vegName);
+                setFormData({
+                    ...formData,
+                    vegetable: vegName,
+                    daysToMaturity: veggieData?.daysToMaturity || 0
+                });
+            }
+            
+            const modeText = config.mode === 'row' 
+                ? `Row ${config.rowIndex + 1}` 
+                : config.mode === 'column'
+                ? `Column ${config.colIndex + 1}`
+                : config.mode === 'cell'
+                ? `Single Cell`
+                : 'All Squares';
+            
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-2xl font-bold text-purple-800 flex items-center gap-2">
+                                <Grid className="w-6 h-6" />
+                                Batch Plant: {modeText}
+                            </h3>
+                            <button 
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <Package className="w-4 h-4" />
+                                    Vegetable Type
+                                </label>
+                                <select
+                                    value={formData.vegetable}
+                                    onChange={(e) => handleVegetableChange(e.target.value)}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                                >
+                                    <option value="">Select vegetable...</option>
+                                    {getOrganizedVegetables().map(veg => (
+                                        <option 
+                                            key={veg.name} 
+                                            value={veg.name}
+                                            style={{ paddingLeft: veg.isParent ? '0' : '20px' }}
+                                        >
+                                            {veg.isParent ? veg.name : `  ↳ ${veg.name}`}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <Calendar className="w-4 h-4" />
+                                    Planting Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={formData.plantingDate}
+                                    onChange={(e) => setFormData({ ...formData, plantingDate: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <Clock className="w-4 h-4" />
+                                    Days to Maturity
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.daysToMaturity}
+                                    onChange={(e) => setFormData({ ...formData, daysToMaturity: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                                    min="0"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    Plants per Square Foot
+                                </label>
+                                <select
+                                    value={formData.dotCount}
+                                    onChange={(e) => setFormData({ ...formData, dotCount: parseInt(e.target.value) })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                                >
+                                    <option value={1}>1 plant (e.g., Potato, Tomato)</option>
+                                    <option value={2}>2 plants</option>
+                                    <option value={3}>3 plants</option>
+                                    <option value={4}>4 plants (e.g., Lettuce, Chard)</option>
+                                    <option value={6}>6 plants</option>
+                                    <option value={9}>9 plants (e.g., Beets, Spinach)</option>
+                                    <option value={16}>16 plants (e.g., Carrots, Radishes)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => onSave(formData)}
+                                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors"
+                            >
+                                Apply to {modeText}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function VegetableManager({ vegetables, onAdd, onUpdate, onDelete, onClose }) {
+            const [editingVeg, setEditingVeg] = useState(null);
+            const [isAdding, setIsAdding] = useState(false);
+            const [isAddingVariety, setIsAddingVariety] = useState(false);
+            const [parentForVariety, setParentForVariety] = useState(null);
+            const [formData, setFormData] = useState({
+                name: '',
+                abbrev: '',
+                daysToMaturity: 0,
+                color: '#22c55e',
+                isParent: true,
+                parentName: null
+            });
+            
+            function startEdit(veg) {
+                setEditingVeg(veg.name);
+                setFormData({ ...veg });
+                setIsAdding(false);
+                setIsAddingVariety(false);
+            }
+            
+            function startAdd() {
+                setIsAdding(true);
+                setIsAddingVariety(false);
+                setEditingVeg(null);
+                setFormData({
+                    name: '',
+                    abbrev: '',
+                    daysToMaturity: 0,
+                    color: '#22c55e',
+                    isParent: true,
+                    parentName: null
+                });
+            }
+            
+            function startAddVariety(parent) {
+                setIsAddingVariety(true);
+                setParentForVariety(parent);
+                setIsAdding(false);
+                setEditingVeg(null);
+                setFormData({
+                    name: '',
+                    abbrev: '',
+                    daysToMaturity: 0,
+                    color: '',
+                    isParent: false,
+                    parentName: parent.name
+                });
+            }
+            
+            function handleSave() {
+                if (!formData.name) {
+                    alert('Please fill in name');
+                    return;
+                }
+                
+                // For varieties, abbrev can be optional (will inherit from parent)
+                if (formData.isParent && !formData.abbrev) {
+                    alert('Please fill in abbreviation for main vegetable');
+                    return;
+                }
+                
+                if (isAdding || isAddingVariety) {
+                    if (vegetables.some(v => v.name === formData.name)) {
+                        alert('A vegetable with this name already exists');
+                        return;
+                    }
+                    onAdd(formData);
+                } else {
+                    onUpdate(editingVeg, formData);
+                }
+                
+                setEditingVeg(null);
+                setIsAdding(false);
+                setIsAddingVariety(false);
+                setParentForVariety(null);
+                setFormData({ 
+                    name: '', 
+                    abbrev: '', 
+                    daysToMaturity: 0, 
+                    color: '#22c55e',
+                    isParent: true,
+                    parentName: null
+                });
+            }
+            
+            function handleDelete(vegName) {
+                if (vegName === 'None') {
+                    alert('Cannot delete "None"');
+                    return;
+                }
+                if (confirm(`Delete ${vegName}? This will remove it from all plantings.`)) {
+                    onDelete(vegName);
+                }
+            }
+            
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-2xl font-bold text-blue-800 flex items-center gap-2">
+                                <Sprout className="w-6 h-6" />
+                                Manage Vegetables
+                            </h3>
+                            <button 
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        <button
+                            onClick={startAdd}
+                            className="w-full mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold transition-colors flex items-center justify-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add Custom Vegetable
+                        </button>
+                        
+                        {(isAdding || isAddingVariety || editingVeg) && (
+                            <div className="mb-6 p-4 border-2 border-blue-300 rounded-lg bg-blue-50">
+                                <h4 className="font-bold mb-3">
+                                    {isAdding ? 'New Vegetable' : isAddingVariety ? `New Variety of ${parentForVariety?.name}` : 'Edit Vegetable'}
+                                </h4>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">Name</label>
+                                        <input
+                                            type="text"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                                            placeholder="e.g., Potato"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">Abbreviation (3 chars)</label>
+                                        <input
+                                            type="text"
+                                            maxLength={3}
+                                            value={formData.abbrev}
+                                            onChange={(e) => setFormData({ ...formData, abbrev: e.target.value.toUpperCase() })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                                            placeholder="e.g., POT"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">Days to Maturity</label>
+                                        <input
+                                            type="number"
+                                            value={formData.daysToMaturity}
+                                            onChange={(e) => setFormData({ ...formData, daysToMaturity: parseInt(e.target.value) || 0 })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                                            min="0"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">Color</label>
+                                        <input
+                                            type="color"
+                                            value={formData.color}
+                                            onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                                            className="w-full h-10 px-1 py-1 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 mt-3">
+                                    <button
+                                        onClick={() => {
+                                            setIsAdding(false);
+                                            setIsAddingVariety(false);
+                                            setEditingVeg(null);
+                                            setParentForVariety(null);
+                                        }}
+                                        className="flex-1 px-3 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    >
+                                        {isAdding || isAddingVariety ? 'Add' : 'Save'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="space-y-2">
+                            {vegetables.filter(v => v.isParent).map(parent => (
+                                <div key={parent.name} className="space-y-1">
+                                    {/* Parent Vegetable */}
+                                    <div className="flex items-center justify-between p-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 bg-white">
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center"
+                                                style={{ backgroundColor: parent.color }}
+                                            >
+                                                <span className="text-sm font-bold text-white drop-shadow">{parent.abbrev}</span>
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-lg">{parent.name}</div>
+                                                <div className="text-sm text-gray-600">{parent.daysToMaturity} days to maturity</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => startAddVariety(parent)}
+                                                className="px-3 py-1 text-sm bg-green-100 text-green-700 hover:bg-green-200 rounded transition-colors flex items-center gap-1"
+                                                title="Add variety"
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                                Add Variety
+                                            </button>
+                                            <button
+                                                onClick={() => startEdit(parent)}
+                                                className="p-2 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                                                title="Edit"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                            {parent.name !== 'None' && (
+                                                <button
+                                                    onClick={() => handleDelete(parent.name)}
+                                                    className="p-2 text-red-600 hover:bg-red-100 rounded transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Varieties */}
+                                    {vegetables.filter(v => v.parentName === parent.name).map(variety => {
+                                        // Get resolved data with parent fallback
+                                        const resolvedColor = variety.color || parent.color;
+                                        const resolvedAbbrev = variety.abbrev || parent.abbrev;
+                                        const resolvedDays = variety.daysToMaturity || parent.daysToMaturity;
+                                        
+                                        return (
+                                            <div
+                                                key={variety.name}
+                                                className="flex items-center justify-between p-3 ml-8 border border-gray-200 rounded-lg hover:bg-gray-50 bg-gray-50"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div
+                                                        className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center"
+                                                        style={{ backgroundColor: resolvedColor }}
+                                                    >
+                                                        <span className="text-xs font-bold text-white drop-shadow">{resolvedAbbrev}</span>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold">↳ {variety.name}</div>
+                                                        <div className="text-xs text-gray-600">
+                                                            {resolvedDays} days
+                                                            {variety.daysToMaturity ? '' : ' (inherited)'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => startEdit(variety)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit2 className="w-3 h-3" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(variety.name)}
+                                                        className="p-2 text-red-600 hover:bg-red-100 rounded transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <button
+                            onClick={onClose}
+                            className="w-full mt-6 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold transition-colors"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Harvest Calendar Modal
+        function HarvestCalendar({ weeklyHarvests, vegetables, onClose, getVegetableData }) {
+            const weeks = Object.keys(weeklyHarvests).sort();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            function formatWeekRange(weekStart) {
+                const start = new Date(weekStart);
+                const end = new Date(start);
+                end.setDate(start.getDate() + 6);
+                
+                const options = { month: 'short', day: 'numeric' };
+                return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
+            }
+            
+            function isCurrentWeek(weekStart) {
+                const start = new Date(weekStart);
+                const end = new Date(start);
+                end.setDate(start.getDate() + 6);
+                return today >= start && today <= end;
+            }
+            
+            function isPastWeek(weekStart) {
+                const start = new Date(weekStart);
+                const end = new Date(start);
+                end.setDate(start.getDate() + 6);
+                return today > end;
+            }
+            
+            // Group harvests by bed within each week
+            function groupByBed(harvests) {
+                const grouped = {};
+                harvests.forEach(harvest => {
+                    if (!grouped[harvest.bedName]) {
+                        grouped[harvest.bedName] = [];
+                    }
+                    grouped[harvest.bedName].push(harvest);
+                });
+                return grouped;
+            }
+            
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-2xl font-bold text-amber-800 flex items-center gap-2">
+                                <CalendarDays className="w-6 h-6" />
+                                Harvest Calendar
+                            </h3>
+                            <button 
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        {weeks.length === 0 ? (
+                            <div className="text-center py-12 text-gray-500">
+                                <CalendarDays className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                                <p className="text-lg">No plants with harvest dates yet!</p>
+                                <p className="text-sm mt-2">Start planting and adding dates to see your harvest schedule.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {weeks.map(weekStart => {
+                                    const harvests = weeklyHarvests[weekStart];
+                                    const byBed = groupByBed(harvests);
+                                    const isCurrent = isCurrentWeek(weekStart);
+                                    const isPast = isPastWeek(weekStart);
+                                    
+                                    return (
+                                        <div 
+                                            key={weekStart} 
+                                            className={`border-2 rounded-lg p-4 ${
+                                                isCurrent 
+                                                    ? 'border-green-500 bg-green-50' 
+                                                    : isPast 
+                                                    ? 'border-gray-300 bg-gray-50 opacity-60'
+                                                    : 'border-amber-300 bg-amber-50'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h4 className="font-bold text-lg">
+                                                    {formatWeekRange(weekStart)}
+                                                    {isCurrent && <span className="ml-2 text-green-600 text-sm">← This Week</span>}
+                                                    {isPast && <span className="ml-2 text-gray-500 text-sm">(Past)</span>}
+                                                </h4>
+                                                <span className="text-sm font-semibold text-gray-600">
+                                                    {harvests.length} harvest{harvests.length !== 1 ? 's' : ''}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="space-y-3">
+                                                {Object.keys(byBed).map(bedName => (
+                                                    <div key={bedName} className="bg-white rounded p-3 border border-gray-200">
+                                                        <div className="font-semibold text-green-800 mb-2">{bedName}</div>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                            {byBed[bedName].map((harvest, idx) => {
+                                                                const veggie = getVegetableData(harvest.vegetable);
+                                                                return (
+                                                                    <div 
+                                                                        key={idx}
+                                                                        className="flex items-center gap-2 bg-gray-50 rounded p-2"
+                                                                    >
+                                                                        <div
+                                                                            className="w-8 h-8 rounded-full flex items-center justify-center border-2 border-gray-300"
+                                                                            style={{ backgroundColor: veggie?.color || '#d1d5db' }}
+                                                                        >
+                                                                            <span className="text-xs font-bold text-white drop-shadow">
+                                                                                {veggie?.abbrev}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex-1">
+                                                                            <div className="font-semibold text-sm">{harvest.vegetable}</div>
+                                                                            <div className="text-xs text-gray-600">
+                                                                                Harvest: {new Date(harvest.harvestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        
+                        <button
+                            onClick={onClose}
+                            className="w-full mt-6 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-semibold transition-colors"
+                        >
+                            Close Calendar
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Garden Configuration Modal
+        function GardenConfigModal({ config, beds, onSave, onClose }) {
+            const [formData, setFormData] = useState({
+                gardens: config.gardens.map(g => ({ ...g }))
+            });
+            
+            function updateGarden(id, field, value) {
+                const newGardens = formData.gardens.map(g => {
+                    if (g.id === id) {
+                        return { ...g, [field]: value };
+                    }
+                    return g;
+                });
+                setFormData({ gardens: newGardens });
+            }
+            
+            function handleSave() {
+                // Validate dimensions
+                const hasInvalidDimensions = formData.gardens.some(g => 
+                    g.enabled && (g.width < 1 || g.width > 10 || g.height < 1 || g.height > 10)
+                );
+                
+                if (hasInvalidDimensions) {
+                    alert('All enabled gardens must have dimensions between 1ft and 10ft');
+                    return;
+                }
+                
+                const enabledCount = formData.gardens.filter(g => g.enabled).length;
+                if (enabledCount === 0) {
+                    alert('At least one garden must be enabled');
+                    return;
+                }
+                
+                onSave(formData);
+            }
+            
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full p-6 my-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-2xl font-bold text-teal-800 flex items-center gap-2">
+                                <Settings className="w-6 h-6" />
+                                Garden Configuration
+                            </h3>
+                            <button 
+                                onClick={onClose}
+                                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mb-4">
+                            Configure up to 4 gardens. Each garden can be 1-10 feet wide and 1-10 feet tall.
+                        </p>
+                        
+                        <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                            {formData.gardens.map((garden) => {
+                                const currentBed = beds.find(b => b.id === garden.id);
+                                const hasData = currentBed && currentBed.squares.some(s => 
+                                    s.dots.some(d => d.vegetable && d.vegetable !== 'None')
+                                );
+                                
+                                return (
+                                    <div 
+                                        key={garden.id}
+                                        className={`p-4 border-2 rounded-lg ${garden.enabled ? 'border-teal-300 bg-teal-50' : 'border-gray-300 bg-gray-50'}`}
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex items-center pt-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={garden.enabled}
+                                                    onChange={(e) => updateGarden(garden.id, 'enabled', e.target.checked)}
+                                                    className="w-5 h-5 cursor-pointer"
+                                                />
+                                            </div>
+                                            
+                                            <div className="flex-1 space-y-3">
+                                                <div>
+                                                    <label className="text-sm font-semibold text-gray-700 mb-1 block">Garden Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={garden.name}
+                                                        onChange={(e) => updateGarden(garden.id, 'name', e.target.value)}
+                                                        disabled={!garden.enabled}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:border-teal-500 focus:outline-none disabled:bg-gray-100"
+                                                        placeholder="e.g., Front Yard, Backyard"
+                                                    />
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">
+                                                            Width (feet)
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max="10"
+                                                            value={garden.width}
+                                                            onChange={(e) => updateGarden(garden.id, 'width', parseInt(e.target.value) || 1)}
+                                                            disabled={!garden.enabled}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded focus:border-teal-500 focus:outline-none disabled:bg-gray-100"
+                                                        />
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">
+                                                            Height (feet)
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max="10"
+                                                            value={garden.height}
+                                                            onChange={(e) => updateGarden(garden.id, 'height', parseInt(e.target.value) || 1)}
+                                                            disabled={!garden.enabled}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded focus:border-teal-500 focus:outline-none disabled:bg-gray-100"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="text-sm text-gray-600">
+                                                    <span className="font-semibold">Total area:</span> {garden.width * garden.height} sq ft 
+                                                    ({garden.width × garden.height} squares)
+                                                </div>
+                                                
+                                                {hasData && !garden.enabled && (
+                                                    <div className="text-sm text-amber-600 font-semibold flex items-center gap-1">
+                                                        ⚠️ This garden has planted data. Disabling will hide it but not delete it.
+                                                    </div>
+                                                )}
+                                                
+                                                {currentBed && garden.enabled && (currentBed.width !== garden.width || currentBed.height !== garden.height) && (
+                                                    <div className="text-sm text-red-600 font-semibold flex items-center gap-1">
+                                                        ⚠️ Changing dimensions will reset all plantings in this garden!
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        
+                        <div className="mt-6 flex gap-3">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-semibold transition-colors"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<GardenPlanner />);
+        
+        } catch (error) {
+            console.error('Error loading garden planner:', error);
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error-message').textContent = error.toString() + '\n\n' + error.stack;
+        }
+    </script>
+</body>
+</html>
