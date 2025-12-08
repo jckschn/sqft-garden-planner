@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/garden-planner.git"
+    "url": "git+https://github.com/jckschn/sqft-garden-planner.git"
   },
   "keywords": [
     "garden",
@@ -22,10 +22,10 @@
     "batch-planting",
     "configurable-gardens"
   ],
-  "author": "Your Name",
+  "author": "jckschn",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yourusername/garden-planner/issues"
+    "url": "https://github.com/jckschn/sqft-garden-planner/issues"
   },
-  "homepage": "https://github.com/yourusername/garden-planner#readme"
+  "homepage": "https://github.com/jckschn/sqft-garden-planner#readme"
 }
