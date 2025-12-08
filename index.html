@@ -215,6 +215,10 @@
             const [beds, setBeds] = useState(initialData.beds);
             const [vegetables, setVegetables] = useState(initialData.vegetables);
             const [gardenConfig, setGardenConfig] = useState(initialData.config);
+            const [vegetableSortMode, setVegetableSortMode] = useState(() => {
+                const saved = localStorage.getItem('gardenPlannerSortMode');
+                return saved || 'manual';
+            });
             
             const [selectedDot, setSelectedDot] = useState(null);
             const [showModal, setShowModal] = useState(false);
@@ -225,6 +229,11 @@
             const [editingBedName, setEditingBedName] = useState(null);
             const [batchConfig, setBatchConfig] = useState({ bedId: null, mode: 'row', rowIndex: null, colIndex: null, squareIndex: null });
             const [saveStatus, setSaveStatus] = useState('');
+            
+            // Save sort mode whenever it changes
+            useEffect(() => {
+                localStorage.setItem('gardenPlannerSortMode', vegetableSortMode);
+            }, [vegetableSortMode]);
             
             // Auto-save whenever beds, vegetables, or config change
             useEffect(() => {
@@ -267,7 +276,13 @@
             
             // Get organized vegetable list (parents with their varieties grouped)
             function getOrganizedVegetables() {
-                const parents = vegetables.filter(v => v.isParent);
+                let parents = vegetables.filter(v => v.isParent);
+                
+                // Sort parents based on mode
+                if (vegetableSortMode === 'alphabetical') {
+                    parents = [...parents].sort((a, b) => a.name.localeCompare(b.name));
+                }
+                
                 const varieties = vegetables.filter(v => !v.isParent);
                 
                 const organized = [];
@@ -822,6 +837,8 @@
                             onUpdate={updateVegetable}
                             onDelete={deleteVegetable}
                             onClose={() => setShowVeggieManager(false)}
+                            sortMode={vegetableSortMode}
+                            onSortModeChange={setVegetableSortMode}
                         />
                     )}
                     
@@ -1244,7 +1261,7 @@
             );
         }
 
-        function VegetableManager({ vegetables, onAdd, onUpdate, onDelete, onClose }) {
+        function VegetableManager({ vegetables, onAdd, onUpdate, onDelete, onClose, sortMode, onSortModeChange }) {
             const [editingVeg, setEditingVeg] = useState(null);
             const [isAdding, setIsAdding] = useState(false);
             const [isAddingVariety, setIsAddingVariety] = useState(false);
@@ -1257,6 +1274,47 @@
                 isParent: true,
                 parentName: null
             });
+            
+            // Sort vegetables based on mode
+            function getSortedParents() {
+                const parents = vegetables.filter(v => v.isParent);
+                if (sortMode === 'alphabetical') {
+                    return [...parents].sort((a, b) => a.name.localeCompare(b.name));
+                }
+                return parents; // Manual order (original order)
+            }
+            
+            // Move vegetable up in manual sort
+            function moveUp(vegName) {
+                const parents = vegetables.filter(v => v.isParent);
+                const varieties = vegetables.filter(v => !v.isParent);
+                const index = parents.findIndex(v => v.name === vegName);
+                if (index > 0) {
+                    const newParents = [...parents];
+                    [newParents[index - 1], newParents[index]] = [newParents[index], newParents[index - 1]];
+                    // Reconstruct vegetables array with varieties
+                    const updatedVegetables = [...newParents, ...varieties];
+                    // Update through parent component
+                    vegetables.splice(0, vegetables.length, ...updatedVegetables);
+                    onUpdate(vegName, vegetables.find(v => v.name === vegName)); // Trigger re-render
+                }
+            }
+            
+            // Move vegetable down in manual sort
+            function moveDown(vegName) {
+                const parents = vegetables.filter(v => v.isParent);
+                const varieties = vegetables.filter(v => !v.isParent);
+                const index = parents.findIndex(v => v.name === vegName);
+                if (index < parents.length - 1) {
+                    const newParents = [...parents];
+                    [newParents[index], newParents[index + 1]] = [newParents[index + 1], newParents[index]];
+                    // Reconstruct vegetables array with varieties
+                    const updatedVegetables = [...newParents, ...varieties];
+                    // Update through parent component
+                    vegetables.splice(0, vegetables.length, ...updatedVegetables);
+                    onUpdate(vegName, vegetables.find(v => v.name === vegName)); // Trigger re-render
+                }
+            }
             
             function startEdit(veg) {
                 setEditingVeg(veg.name);
@@ -1364,6 +1422,38 @@
                             Add Custom Vegetable
                         </button>
                         
+                        {/* Sort Controls */}
+                        <div className="mb-4 p-3 bg-gray-100 rounded-lg">
+                            <div className="text-sm font-semibold text-gray-700 mb-2">Sort Order:</div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => onSortModeChange('manual')}
+                                    className={`flex-1 px-3 py-2 rounded font-semibold transition-colors ${
+                                        sortMode === 'manual' 
+                                            ? 'bg-blue-600 text-white' 
+                                            : 'bg-white text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    Manual Order
+                                </button>
+                                <button
+                                    onClick={() => onSortModeChange('alphabetical')}
+                                    className={`flex-1 px-3 py-2 rounded font-semibold transition-colors ${
+                                        sortMode === 'alphabetical' 
+                                            ? 'bg-blue-600 text-white' 
+                                            : 'bg-white text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    A-Z
+                                </button>
+                            </div>
+                            {sortMode === 'manual' && (
+                                <div className="mt-2 text-xs text-gray-600">
+                                    Use ▲ ▼ buttons to reorder vegetables
+                                </div>
+                            )}
+                        </div>
+                        
                         {(isAdding || isAddingVariety || editingVeg) && (
                             <div className="mb-6 p-4 border-2 border-blue-300 rounded-lg bg-blue-50">
                                 <h4 className="font-bold mb-3">
@@ -1434,11 +1524,32 @@
                         )}
                         
                         <div className="space-y-2">
-                            {vegetables.filter(v => v.isParent).map(parent => (
+                            {getSortedParents().map((parent, index) => (
                                 <div key={parent.name} className="space-y-1">
                                     {/* Parent Vegetable */}
                                     <div className="flex items-center justify-between p-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 bg-white">
                                         <div className="flex items-center gap-3">
+                                            {/* Manual sort controls */}
+                                            {sortMode === 'manual' && (
+                                                <div className="flex flex-col gap-1">
+                                                    <button
+                                                        onClick={() => moveUp(parent.name)}
+                                                        disabled={index === 0}
+                                                        className={`text-xs ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:text-blue-600'}`}
+                                                        title="Move up"
+                                                    >
+                                                        ▲
+                                                    </button>
+                                                    <button
+                                                        onClick={() => moveDown(parent.name)}
+                                                        disabled={index === getSortedParents().length - 1}
+                                                        className={`text-xs ${index === getSortedParents().length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:text-blue-600'}`}
+                                                        title="Move down"
+                                                    >
+                                                        ▼
+                                                    </button>
+                                                </div>
+                                            )}
                                             <div
                                                 className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center"
                                                 style={{ backgroundColor: parent.color }}
@@ -1807,7 +1918,7 @@
                                                 
                                                 <div className="text-sm text-gray-600">
                                                     <span className="font-semibold">Total area:</span> {garden.width * garden.height} sq ft 
-                                                    ({garden.width × garden.height} squares)
+                                                    ({garden.width * garden.height} squares)
                                                 </div>
                                                 
                                                 {hasData && !garden.enabled && (
